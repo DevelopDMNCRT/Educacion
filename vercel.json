@@ -17,7 +17,15 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/admin/$1"
+      "dest": "/admin/$1",
+      "continue": true
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/admin/index.html"
     }
   ]
 }
