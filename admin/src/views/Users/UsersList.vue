@@ -296,7 +296,7 @@ import Modal from "@/components/ui/Modal.vue";
 import { useAuth } from "@/composables/useAuth";
 
 const searchQuery = ref("");
-const apiUrl = "http://localhost:4000/api/users";
+const apiUrl = import.meta.env.PROD ? '/api/users' : 'http://localhost:4000/api/users';
 const { getAuthHeaders } = useAuth();
 
 // ── Estado de usuarios ──────────────────────────────────────────

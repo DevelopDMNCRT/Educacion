@@ -225,7 +225,8 @@ const togglePasswordVisibility = () => {
 const handleSubmit = async () => {
   errorMsg.value = ''
   try {
-    const res = await fetch('http://localhost:4000/api/auth/login', {
+    const authUrl = import.meta.env.PROD ? '/api/auth/login' : 'http://localhost:4000/api/auth/login';
+    const res = await fetch(authUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ emailOrUsername: email.value, password: password.value })
