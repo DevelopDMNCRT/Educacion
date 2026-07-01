@@ -3,29 +3,21 @@
   "builds": [
     {
       "src": "admin/package.json",
-      "use": "@vercel/vite"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     },
     {
       "src": "server/index.js",
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/admin/$1",
-      "continue": true
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/admin/index.html"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.js" },
+    { "source": "/assets/(.*)", "destination": "/admin/assets/$1" },
+    { "source": "/images/(.*)", "destination": "/admin/images/$1" },
+    { "source": "/favicon.ico", "destination": "/admin/favicon.ico" },
+    { "source": "/(.*)", "destination": "/admin/index.html" }
   ]
 }
