@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -154,6 +155,18 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `Vue.js ${to.meta.title} | TailAdmin - Vue.js Tailwind CSS Dashboard Template`
-  next()
+  document.title = `Admin ${to.meta.title} | Educacion`
+  
+  const { isAuthenticated } = useAuth()
+  
+  const publicPages = ['/signin', '/signup']
+  const authRequired = !publicPages.includes(to.path)
+
+  if (authRequired && !isAuthenticated.value) {
+    next('/signin')
+  } else if (!authRequired && isAuthenticated.value) {
+    next('/')
+  } else {
+    next()
+  }
 })

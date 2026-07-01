@@ -289,21 +289,35 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import AdminLayout from "@/components/layout/AdminLayout.vue";
 import UsersTable from "@/components/tables/UsersTable.vue";
 import Modal from "@/components/ui/Modal.vue";
+import { useAuth } from "@/composables/useAuth";
 
 const searchQuery = ref("");
+const apiUrl = "http://localhost:4000/api/users";
+const { getAuthHeaders } = useAuth();
 
 // ── Estado de usuarios ──────────────────────────────────────────
-const users = ref([
-  { id: 1, name: 'Juan Pérez',      username: 'jperez',      email: 'jperez@educacion.mx',      role: 'Administrador', createdAt: '15 Jan 2025' },
-  { id: 2, name: 'Ana García',      username: 'agarcia',     email: 'agarcia@educacion.mx',     role: 'Editor',        createdAt: '10 Feb 2025' },
-  { id: 3, name: 'Carlos López',    username: 'clopez',      email: 'clopez@educacion.mx',      role: 'Usuario',       createdAt: '05 Mar 2025' },
-  { id: 4, name: 'María Rodríguez', username: 'mrodriguez',  email: 'mrodriguez@educacion.mx',  role: 'Administrador', createdAt: '20 Apr 2025' },
-  { id: 5, name: 'Luis Martínez',   username: 'lmartinez',   email: 'lmartinez@educacion.mx',   role: 'Usuario',       createdAt: '12 May 2025' },
-]);
+const users = ref([]);
+
+const fetchUsers = async () => {
+  try {
+    const res = await fetch(apiUrl, {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!res.ok) throw new Error("Failed to fetch");
+    const data = await res.json();
+    users.value = data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+onMounted(() => {
+  fetchUsers();
+});
 
 const selectedUser = ref(null);
 
@@ -333,26 +347,41 @@ function closeFormModal() {
   isFormOpen.value = false;
 }
 
-function handleFormSubmit() {
+async function handleFormSubmit() {
   if (formMode.value === 'add' && form.value.password !== form.value.confirmPassword) {
     return; // bloquea si las contraseñas no coinciden
   }
-  if (formMode.value === 'add') {
-    const newUser = {
-      id: Date.now(),
-      name: form.value.name,
-      username: form.value.username,
-      email: form.value.email,
-      role: form.value.role,
-      createdAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    };
-    users.value.push(newUser);
-  } else {
-    const idx = users.value.findIndex(u => u.id === selectedUser.value.id);
-    if (idx !== -1) {
-      users.value[idx] = { ...users.value[idx], ...form.value };
+
+  try {
+    if (formMode.value === 'add') {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(form.value)
+      });
+      if (res.ok) {
+        await fetchUsers();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Error creando usuario");
+      }
+    } else {
+      const res = await fetch(`${apiUrl}/${selectedUser.value.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(form.value)
+      });
+      if (res.ok) {
+        await fetchUsers();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Error actualizando usuario");
+      }
     }
+  } catch (error) {
+    console.error("Error submitting form:", error);
   }
+
   closeFormModal();
 }
 
@@ -372,8 +401,21 @@ function openDeleteConfirm(user) {
   isDeleteOpen.value = true;
 }
 
-function confirmDelete() {
-  users.value = users.value.filter(u => u.id !== selectedUser.value.id);
+async function confirmDelete() {
+  try {
+    const res = await fetch(`${apiUrl}/${selectedUser.value.id}`, {
+      method: "DELETE",
+      headers: { ...getAuthHeaders() }
+    });
+    if (res.ok) {
+      await fetchUsers();
+    } else {
+      alert("Error eliminando usuario");
+    }
+  } catch (error) {
+    console.error("Error deleting user:", error);
+  }
+  
   isDeleteOpen.value = false;
   selectedUser.value = null;
 }

@@ -4,7 +4,7 @@
       class="flex items-center text-gray-700 dark:text-gray-400"
       @click.prevent="toggleDropdown"
     >
-      <span class="block mr-1 font-medium text-theme-sm">Musharof </span>
+      <span class="block mr-1 font-medium text-theme-sm">{{ currentUser?.name || 'Usuario' }} </span>
 
       <ChevronDownIcon :class="{ 'rotate-180': dropdownOpen }" />
     </button>
@@ -16,10 +16,10 @@
     >
       <div>
         <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-          Musharof Chowdhury
+          {{ currentUser?.name || 'Usuario Desconocido' }}
         </span>
         <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-          randomuser@pimjo.com
+          {{ currentUser?.email || 'email@example.com' }}
         </span>
       </div>
 
@@ -57,6 +57,9 @@
 import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon, InfoCircleIcon } from '@/icons'
 import { RouterLink } from 'vue-router'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+
+const { currentUser, logout } = useAuth()
 
 const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
@@ -76,8 +79,7 @@ const closeDropdown = () => {
 }
 
 const signOut = () => {
-  // Implement sign out logic here
-  console.log('Signing out...')
+  logout()
   closeDropdown()
 }
 
